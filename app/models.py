@@ -11,6 +11,12 @@ from hashlib import md5
 def load_user(id):
     return db.session.get(User, int(id))
 
+followers = sa.Table(
+    'followers', db.metadata,
+    sa.Column('follower_id', sa.Integer, sa.ForeignKey('user.id'),
+              primary_key=True),
+    sa.Column('followed_id',sa.Integer, sa.ForeignKey('user_id'), primary_key=True)
+)
 
 class User(UserMixin,db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -24,6 +30,17 @@ class User(UserMixin,db.Model):
         default=lambda: datetime.now(timezone.utc)
     )
     posts: so.WriteOnlyMapped['Post']= so.relationship(back_populates='author')
+
+    following: so.WriteOnlyMapped['User'] = so.relationship(
+        secondary=followers, primaryjoin=(followers.c.follower_id == id),
+    secondaryjoin=(followers.c.followe_id == id),
+    back_populates='followers'    
+    )
+    followers: so.WriteOnlyMapped['User'] = so.relationship(
+        secondary=followers, primaryjoin=(followers.c.followed_id == id),
+        secondaryjoin=(followers.c.follower_id == id),
+        back_populates='following'
+    )
 
     def __repr__(self):
         return (f'User: {self.username}')
